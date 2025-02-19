@@ -8,11 +8,42 @@ services:
       - ./service1:/app
     working_dir: /app
     command: python -u app.py
+    deploy:
+      mode: replicated
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+      placement:
+        constraints:
+          - "node.labels.role == primary"
 
   service2:
     image: python:3.8-slim
     container_name: python_service2
-    volumes:
-      - ./service2:/app
+    # volumes:
+    #   - ./service2:/app
     working_dir: /app
-    command: python -u app.py
+    command: python -u -c "import time; [print('I am here at service 2') or time.sleep(5) for _ in iter(int, 1)]"
+    deploy:
+      mode: replicated
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+      placement:
+        constraints:
+          - "node.labels.role == secondary"
+
+  # standby:
+  #   image: python:3.8-slim
+  #   container_name: python_standby
+  #   volumes:
+  #     - ./standby:/app
+  #   working_dir: /app
+  #   command: python -u app.py
+  #   deploy:
+  #     mode: global  # Runs on any available node
+  #     restart_policy:
+  #       condition: on-failure
+  #     placement:
+  #       constraints:
+  #         - "node.labels.role == backup"
